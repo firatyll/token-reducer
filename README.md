@@ -99,4 +99,4 @@ The CLI uses Rich for colored output to enhance readability of the results.
 - `requirements.txt`: Required Python packages
 
 ## License
-MIT License
+This project is licensed under the [MIT License](LICENSE).
