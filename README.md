@@ -42,6 +42,45 @@ Token Reducer is a Python CLI tool that automatically removes polite expressions
 - **CountVectorizer**: For extracting n-gram features from text
 - **Log-odds Scoring**: To identify and rank polite expressions
 
+We have enhanced the original log-odds model by introducing a **TF–IDF + Logistic Regression** pipeline:
+
+1. **Original Approach**: Used `CountVectorizer` and log-odds scoring to select the top 250 polite n-grams and build a regex-based stripper.
+2. **New Pipeline**: Added a `TfidfVectorizer` followed by an `LogisticRegression` model inside a Scikit‑learn `Pipeline`, enabling:
+
+   * Weighted n-gram features (TF–IDF) for more nuanced text representation.
+   * L2 regularization in logistic regression to prevent overfitting.
+   * Single-step `fit`/`predict` calls and seamless integration with `GridSearchCV` for hyperparameter tuning.
+3. **Threshold Logic**: We compute a politeness probability from the pipeline; if it exceeds a configurable threshold, we apply the regex-based removal of polite expressions.
+
+## Performance Metrics
+
+Below are the evaluation results comparing the **TF–IDF + LR pipeline** against the **log-odds classifier** on a held-out test set:
+
+### Confusion Matrix: Pipeline
+
+![Confusion Matrix: Pipeline](<assets/confusion matrix pipeline.png>)
+
+### Confusion Matrix: Log-Odds
+
+![Confusion Matrix: Log-Odds](<assets/confusion matrix log odds.png>)
+
+### Precision-Recall Curves
+
+![Precision-Recall Curves](<assets/precision recall curves.png>)
+
+### ROC Curves
+
+![ROC Curves](<assets/ROC curves.png>)
+
+| Metric                | Pipeline (TF–IDF + LR) | Log-Odds Classifier |
+| --------------------- | ---------------------- | ------------------- |
+| **Accuracy**          | 95%                    | 93%                 |
+| **Macro F1-Score**    | 0.95                   | 0.93                |
+| **ROC AUC**           | 0.989                  | 0.973               |
+| **Average Precision** | 0.99                   | 0.97                |
+
+The new TF–IDF + LR pipeline demonstrates superior accuracy and discriminative power, making it the recommended default for polite expression stripping.
+
 ## Installation
 
 1. Install the required packages:
@@ -54,16 +93,6 @@ Token Reducer is a Python CLI tool that automatically removes polite expressions
    ```
 
 ## Usage
-
-The strip function is in strip_polite.py. Example usage:
-
-```python
-from strip_polite import strip_polite
-
-text = "Hello World, congratulations on taking the first step towards improving!"
-result = strip_polite(text)
-print(result)  # Output: 'Hello World'
-```
 
 ### Command Line Interface (CLI)
 
@@ -82,9 +111,12 @@ The project includes a user-friendly command-line interface that allows you to i
 
 Example session:
 ```
-> Please help me with this task, thank you
+>  Please help me with this task, thank you
+
+Politeness Score: [0.66816671]
+
 Cleaned Sentence:
-help me with this task
+Please help me with this task
 
 > exit
 Goodbye!
@@ -93,10 +125,12 @@ Goodbye!
 The CLI uses Rich for colored output to enhance readability of the results.
 
 ## Files
-- `strip_polite.py`: Main function to remove polite expressions
-- `train_model.py`: Trains the model and generates the regex pattern
-- `politeness_model.joblib`: Trained model and regex pattern
-- `requirements.txt`: Required Python packages
+* `strip_polite.py`: Main function to remove polite expressions
+* `train_model.py`: Trains the model and generates the regex pattern
+* `politeness_models.joblib`: Trained pipeline, vectorizers, and regex pattern
+* `CLI.py`: Interactive command-line interface
+* `evaluate.py`: Script for detailed performance evaluation and visualization
+* `requirements.txt`: Required Python packages
 
 ## License
 This project is licensed under the [MIT License](LICENSE).
