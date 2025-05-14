@@ -1,4 +1,6 @@
-# Token Reducer
+# Token Reducer - Politeness Stripper
+
+### Try It Here: [https://token-reducer.streamlit.app/](https://token-reducer.streamlit.app/)
 
 ```
  ____        ___        __                                           
