@@ -115,7 +115,24 @@ The direct feature matching approach provides excellent balance between accuracy
 
 ## Usage
 
-### Command Line Interface (CLI)
+### Web Interface (Streamlit App)
+
+The project includes a web-based interface built with Streamlit that makes it even easier to use:
+
+```bash
+streamlit run app.py
+```
+
+This will start a local web server and open the interface in your browser. The web UI features:
+
+- Interactive text input and file upload options
+- Real-time politeness analysis with metrics
+- Side-by-side text comparison
+- Visual representation of removed expressions
+- Token reduction statistics
+- Adjustable politeness threshold
+
+### Command Line Interface
 
 The project includes a user-friendly command-line interface that allows you to interactively strip polite expressions from text:
 
