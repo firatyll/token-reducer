@@ -51,6 +51,7 @@ pydantic_core==2.33.2
 pydeck==0.9.1
 pyfiglet==1.0.2
 Pygments==2.19.1
+pyspellchecker==0.8.2
 python-dateutil==2.9.0.post0
 pytz==2025.2
 PyYAML==6.0.2
