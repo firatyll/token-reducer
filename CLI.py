@@ -1,6 +1,7 @@
 from rich import print
 import pyfiglet
 from strip_polite import load_resources, remove_polite_features
+from spell_correct import correct_spell
 
 ascii_banner = pyfiglet.figlet_format("Politeness\nStripper", font="larry3d")
 print(f"[purple]{ascii_banner}[/purple]")
@@ -19,7 +20,10 @@ while True:
         print("\n[bold green]Goodbye![/bold green]")
         break
     
-    cleaned_sentence, removed_features = remove_polite_features(sentence, polite_features_dict, nlp, THRESHOLD)
+    corrected_sentence = correct_spell(sentence)
+    if corrected_sentence != sentence:
+        print(f"\n[bold cyan]Text has been spell-corrected.[/bold cyan]")
+    cleaned_sentence, removed_features = remove_polite_features(corrected_sentence, polite_features_dict, nlp, THRESHOLD)
     
     politeness_score = len(removed_features) / 10.0 if removed_features else 0.0
     politeness_score = min(politeness_score, 1.0) 
