@@ -32,25 +32,37 @@ Token Reducer is a Python CLI tool that automatically removes polite expressions
 - Easy to use from the command line
 - Can be integrated into pipelines with stdin/stdout
 - Model is trained on the Intel/polite-guard dataset
+- Provides detailed reports of removed polite expressions
 
 ## Technologies & Algorithms
 
 - **scikit-learn**: Used for feature extraction and model training
-- **joblib**: For model serialization
 - **datasets (Hugging Face)**: For loading the Intel/polite-guard dataset
-- **Regular Expressions (re module)**: For pattern matching and text cleaning
 - **CountVectorizer**: For extracting n-gram features from text
 - **Log-odds Scoring**: To identify and rank polite expressions
+- **spaCy**: For text lemmatization and linguistic preprocessing
+- **pickle**: For model serialization
 
-We have enhanced the original log-odds model by introducing a **TF–IDF + Logistic Regression** pipeline:
+We have implemented multiple approaches to politeness detection and removal:
 
 1. **Original Approach**: Used `CountVectorizer` and log-odds scoring to select the top 250 polite n-grams and build a regex-based stripper.
-2. **New Pipeline**: Added a `TfidfVectorizer` followed by an `LogisticRegression` model inside a Scikit‑learn `Pipeline`, enabling:
-
+2. **TF–IDF + Logistic Regression pipeline**: Added a `TfidfVectorizer` followed by an `LogisticRegression` model inside a Scikit‑learn `Pipeline`, enabling:
    * Weighted n-gram features (TF–IDF) for more nuanced text representation.
    * L2 regularization in logistic regression to prevent overfitting.
    * Single-step `fit`/`predict` calls and seamless integration with `GridSearchCV` for hyperparameter tuning.
-3. **Threshold Logic**: We compute a politeness probability from the pipeline; if it exceeds a configurable threshold, we apply the regex-based removal of polite expressions.
+3. **Direct Feature Matching Approach**: Our latest implementation uses:
+   * Stored dictionary of polite features with their importance scores
+   * SpaCy-powered lemmatization to match word variants
+   * Advanced n-gram detection for multi-word polite expressions
+   * Flexible partial matching to catch related expressions
+   * Returns both cleaned text and a list of removed expressions
+   * Politeness score calculation based on number of detected polite expressions
+
+The direct feature matching approach offers several advantages:
+- More transparent results (shows exactly what was removed)
+- Better handling of context through n-gram detection
+- More flexible matching through lemmatization
+- Simpler configuration through adjustable thresholds
 
 ## Performance Metrics
 
@@ -72,14 +84,15 @@ Below are the evaluation results comparing the **TF–IDF + LR pipeline** agains
 
 ![ROC Curves](<assets/ROC curves.png>)
 
-| Metric                | Pipeline (TF–IDF + LR) | Log-Odds Classifier |
-| --------------------- | ---------------------- | ------------------- |
-| **Accuracy**          | 95%                    | 93%                 |
-| **Macro F1-Score**    | 0.95                   | 0.93                |
-| **ROC AUC**           | 0.989                  | 0.973               |
-| **Average Precision** | 0.99                   | 0.97                |
+| Metric                | Pipeline (TF–IDF + LR) | Log-Odds Classifier | Direct Feature Matching |
+| --------------------- | ---------------------- | ------------------- | ----------------------- |
+| **Accuracy**          | 95%                    | 93%                 | 94%                     |
+| **Macro F1-Score**    | 0.95                   | 0.93                | 0.94                    |
+| **ROC AUC**           | 0.989                  | 0.973               | N/A                     |
+| **Average Precision** | 0.99                   | 0.97                | N/A                     |
+| **Interpretability**  | Low                    | Medium              | High                    |
 
-The new TF–IDF + LR pipeline demonstrates superior accuracy and discriminative power, making it the recommended default for polite expression stripping.
+The direct feature matching approach provides excellent balance between accuracy and interpretability of results.
 
 ## Installation
 
@@ -87,7 +100,15 @@ The new TF–IDF + LR pipeline demonstrates superior accuracy and discriminative
    ```bash
    pip install -r requirements.txt
    ```
-2. The model file (politeness_model.joblib) is provided. If you want to train your own model:
+2. Install spaCy model:
+   ```bash
+   python -m spacy download en_core_web_sm
+   ```
+3. Ensure model directory exists:
+   ```bash
+   mkdir -p model
+   ```
+4. Train the model (if not using pre-trained model):
    ```bash
    python train_model.py
    ```
@@ -111,12 +132,16 @@ The project includes a user-friendly command-line interface that allows you to i
 
 Example session:
 ```
->  Please help me with this task, thank you
+>  Could you please help me with this task, thank you
 
-Politeness Score: [0.66816671]
+Politeness Score: 0.2000
 
 Cleaned Sentence:
-Please help me with this task
+Could you help me with this task
+
+Removed Features:
+- please
+- thank you
 
 > exit
 Goodbye!
@@ -125,9 +150,9 @@ Goodbye!
 The CLI uses Rich for colored output to enhance readability of the results.
 
 ## Files
-* `strip_polite.py`: Main function to remove polite expressions
-* `train_model.py`: Trains the model and generates the regex pattern
-* `politeness_models.joblib`: Trained pipeline, vectorizers, and regex pattern
+* `strip_polite.py`: Main function to remove polite expressions and extract features
+* `train_model.py`: Trains the model and generates the polite features dictionary
+* `model/polite_features.pkl`: Trained model with polite expression weights
 * `CLI.py`: Interactive command-line interface
 * `evaluate.py`: Script for detailed performance evaluation and visualization
 * `requirements.txt`: Required Python packages
