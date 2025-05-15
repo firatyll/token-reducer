@@ -1,31 +1,8 @@
 import pickle
-import os
-import spacy
 import streamlit as st
 from strip_polite import remove_polite_features
 from spell_correct import correct_spell
-
-def lemmatize_text(text, nlp):
-    doc = nlp(text)
-    return " ".join([token.lemma_.lower() for token in doc])
-
-def load_resources():
-
-    if not os.path.exists('model/polite_features.pkl'):
-        st.error("Error: Model files not found. Please run main.py first to train the model.")
-        st.stop()
-        
-    with open('model/polite_features.pkl', 'rb') as f:
-        polite_features_dict = pickle.load(f)
-    
-    try:
-        nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
-    except OSError:
-        st.error("Error: spaCy model 'en_core_web_sm' not found. Please install it with:")
-        st.code("python -m spacy download en_core_web_sm")
-        st.stop()
-    
-    return polite_features_dict, nlp
+from utils import load_resources, lemmatize_text
 
 def main():
 

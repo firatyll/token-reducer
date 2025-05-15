@@ -8,6 +8,7 @@ from sklearn.pipeline import Pipeline
 import numpy as np
 import pickle
 import os
+from utils import lemmatize_text
 
 ds = load_dataset("Intel/polite-guard", split="train")
 
@@ -15,10 +16,6 @@ nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 
 polite_texts = [r["text"] for r in ds if r["label"] in ("polite", "somewhat polite")]
 nonpolite_texts = [r["text"] for r in ds if r["label"] in ("impolite", "neutral")]
-
-def lemmatize_text(text):
-    doc = nlp(text)
-    return " ".join([token.lemma_.lower() for token in doc])
 
 lemmatized_polite = [lemmatize_text(text) for text in polite_texts]
 lemmatized_nonpolite = [lemmatize_text(text) for text in nonpolite_texts]

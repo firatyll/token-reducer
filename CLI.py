@@ -1,7 +1,8 @@
 from rich import print
 import pyfiglet
-from strip_polite import load_resources, remove_polite_features
+from strip_polite import remove_polite_features
 from spell_correct import correct_spell
+from utils import load_resources
 
 ascii_banner = pyfiglet.figlet_format("Politeness\nStripper", font="larry3d")
 print(f"[purple]{ascii_banner}[/purple]")

@@ -1,25 +1,3 @@
-import pickle
-import os
-import spacy
-
-def load_resources():
-    if not os.path.exists('model/polite_features.pkl'):
-        print("Error: Model files not found. Please run main.py first to train the model.")
-        
-    with open('model/polite_features.pkl', 'rb') as f:
-        polite_features_dict = pickle.load(f)
-    
-    try:
-        nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
-    except OSError:
-        print("Error: spaCy model 'en_core_web_sm' not found. Please install it with:")
-    
-    return polite_features_dict, nlp
-
-def lemmatize_text(text, nlp):
-    doc = nlp(text)
-    return " ".join([token.lemma_.lower() for token in doc])
-
 def remove_polite_features(text, polite_features_dict, nlp, threshold):
     doc = nlp(text)
     
