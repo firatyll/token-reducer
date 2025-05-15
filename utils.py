@@ -2,14 +2,14 @@ import pickle
 import spacy
 
 POLITE_FEATURES_DIC = None
-NLP = None
+NLP = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 
 def load_resources():
     with open('model/polite_features.pkl', 'rb') as f:
         polite_features_dict = pickle.load(f)
-    NLP = spacy.load("en_core_web_sm", disable=["parser", "ner"])
+    nlp = NLP
     
-    return polite_features_dict, NLP
+    return polite_features_dict, nlp
 
 def lemmatize_text(text):
     doc = NLP(text)

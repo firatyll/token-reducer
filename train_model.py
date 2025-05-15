@@ -1,21 +1,26 @@
-from datasets import load_dataset
-import spacy
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
-from sklearn.pipeline import Pipeline
-import numpy as np
-import pickle
 import os
+import spacy
+import pickle
+import numpy as np
 from utils import lemmatize_text
+from datasets import load_dataset
+from sklearn.pipeline import Pipeline
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-ds = load_dataset("Intel/polite-guard", split="train")
+intel_ds = load_dataset("Intel/polite-guard", split="train")
+wiki_ds = load_dataset("JaehyungKim/p2c_polite_wiki", split="train")
 
 nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 
-polite_texts = [r["text"] for r in ds if r["label"] in ("polite", "somewhat polite")]
-nonpolite_texts = [r["text"] for r in ds if r["label"] in ("impolite", "neutral")]
+polite_texts = [r["text"] for r in intel_ds if r["label"] in ("polite", "somewhat polite")]
+nonpolite_texts = [r["text"] for r in intel_ds if r["label"] in ("impolite", "neutral")]
+wiki_polite = [r["sentence"] for r in wiki_ds if r["label"] == 1]
+wiki_nonpolite = [r["sentence"] for r in wiki_ds if r["label"] == 0]
+polite_texts += wiki_polite
+nonpolite_texts += wiki_nonpolite
 
 lemmatized_polite = [lemmatize_text(text) for text in polite_texts]
 lemmatized_nonpolite = [lemmatize_text(text) for text in nonpolite_texts]
