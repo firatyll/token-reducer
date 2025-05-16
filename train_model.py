@@ -7,8 +7,8 @@ from datasets import load_dataset
 from sklearn.pipeline import Pipeline
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split, GridSearchCV
 
 intel_ds = load_dataset("Intel/polite-guard", split="train")
 wiki_ds = load_dataset("JaehyungKim/p2c_polite_wiki", split="train")
@@ -33,45 +33,41 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 word_pipeline = Pipeline([
     ('vectorizer', TfidfVectorizer(
         analyzer='word',
-        ngram_range=(1, 3),
-        min_df=5, 
-        max_df=0.7,
         stop_words='english',
         sublinear_tf=True
     )),
-    ('classifier', MultinomialNB(alpha=0.1)) 
+    ('classifier', MultinomialNB()) 
 ])
 
-word_pipeline.fit(X_train, y_train)
+param_grid = {
+    'vectorizer__ngram_range' : [(1,1), (1,2), (1,3)],
+    'vectorizer__min_df'      : [3, 5],
+    'vectorizer__max_df'      : [0.7, 0.9],
+    'classifier__alpha'       : [0.01, 0.1, 0.5]
+}
 
-y_pred = word_pipeline.predict(X_test)
+grid = GridSearchCV(
+    estimator   = word_pipeline,
+    param_grid  = param_grid,
+    scoring     = 'f1_macro', 
+    cv          = 3,
+    n_jobs      = -1,
+    verbose     = 2
+)
+
+grid.fit(X_train, y_train)
+
+print("Best hyper-parameters:")
+for k, v in grid.best_params_.items():
+    print(f"  {k}: {v}")
+
+best_model = grid.best_estimator_
+
+y_pred = best_model.predict(X_test)
 print(classification_report(y_test, y_pred, target_names=["non-polite", "polite"]))
 
-print("\nTrying different n-gram ranges for comparison:")
-
-unigram_pipeline = Pipeline([
-    ('vectorizer', TfidfVectorizer(
-        analyzer='word',
-        ngram_range=(1, 1),
-        min_df=5, 
-        max_df=0.7,
-        stop_words='english'
-    )),
-    ('classifier', MultinomialNB(alpha=0.1))
-])
-
-bigram_pipeline = Pipeline([
-    ('vectorizer', TfidfVectorizer(
-        analyzer='word',
-        ngram_range=(2, 2), 
-        min_df=5, 
-        max_df=0.7
-    )),
-    ('classifier', MultinomialNB(alpha=0.1))
-])
-
-vectorizer = word_pipeline.named_steps['vectorizer']
-classifier = word_pipeline.named_steps['classifier']
+vectorizer = best_model.named_steps['vectorizer']
+classifier = best_model.named_steps['classifier']
 feature_names = vectorizer.get_feature_names_out()
 
 feature_importances = classifier.feature_log_prob_[1] - classifier.feature_log_prob_[0]
@@ -99,7 +95,7 @@ print("\nSaving model and important features...")
 os.makedirs('model', exist_ok=True)
 
 with open('model/polite_classifier.pkl', 'wb') as f:
-    pickle.dump(word_pipeline, f)
+    pickle.dump(best_model, f)
 polite_features_dict = {feature: importance for feature, importance in top_polite_features}
 with open('model/polite_features.pkl', 'wb') as f:
     pickle.dump(polite_features_dict, f)
