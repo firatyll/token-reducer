@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 
 intel_ds = load_dataset("Intel/polite-guard", split="train")
 wiki_ds = load_dataset("JaehyungKim/p2c_polite_wiki", split="train")
+p_corpus = load_dataset("frfede/politeness-corpus", split="train")
 
 nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 
@@ -19,8 +20,13 @@ polite_texts = [r["text"] for r in intel_ds if r["label"] in ("polite", "somewha
 nonpolite_texts = [r["text"] for r in intel_ds if r["label"] in ("impolite", "neutral")]
 wiki_polite = [r["sentence"] for r in wiki_ds if r["label"] == 1]
 wiki_nonpolite = [r["sentence"] for r in wiki_ds if r["label"] == 0]
+pc_polite     = [r["text"] for r in p_corpus if r["label"] == 2]
+pc_nonpolite  = [r["text"] for r in p_corpus if r["label"] != 2]
 polite_texts += wiki_polite
+
 nonpolite_texts += wiki_nonpolite
+polite_texts    += pc_polite
+nonpolite_texts += pc_nonpolite
 
 lemmatized_polite = [lemmatize_text(text) for text in polite_texts]
 lemmatized_nonpolite = [lemmatize_text(text) for text in nonpolite_texts]
